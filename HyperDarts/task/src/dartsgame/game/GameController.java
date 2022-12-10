@@ -85,7 +85,7 @@ public class GameController {
 
     @DeleteMapping(path = "/delete/{gameID}")
     public ResponseEntity<Map> deleteGame(@PathVariable("gameID") Long gameID) {
-        if (gameService.deleteStudent(gameID)) {
+        if (gameService.deleteGame(gameID)) {
             return ResponseEntity.ok(Collections.singletonMap("result", "Game with ID=" + gameID + " successfully deleted!"));
         } else {
             return ResponseEntity.notFound().build();

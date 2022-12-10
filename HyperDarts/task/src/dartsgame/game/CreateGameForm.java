@@ -1,5 +1,8 @@
 package dartsgame.game;
 
+/**
+ * Object of body for /create API
+ */
 public class CreateGameForm {
     private Integer targetScore;
 

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Interface to work with games table through objects
+ */
 @Repository
 public interface GameRepository extends JpaRepository<Game, Long> {
 
