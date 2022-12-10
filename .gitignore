@@ -1,0 +1,5 @@
+# Project exclude paths
+/.gradle/
+/HyperDarts/task/build/
+/HyperDarts/task/out/
+/HyperDarts/task/out/production/classes/

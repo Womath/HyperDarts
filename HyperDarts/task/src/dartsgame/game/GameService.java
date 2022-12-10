@@ -4,6 +4,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +37,9 @@ public class GameService {
     }
 
     public List<Game> getAllGames() {
-        return gameRepository.findAll();
+        List<Game> list = gameRepository.findAll();
+        Collections.reverse(list);
+        return list;
     }
 
     public Map addNewGame(String name, Integer targetScore) {
@@ -62,6 +65,7 @@ public class GameService {
         } else if (game.getPlayerTwo().equals("")) {
             game.setPlayerTwo(name);
         }
+        game.setGameStatus("started");
         gameRepository.save(game);
         return objectMapper.convertValue(getGame(id), Map.class);
     }

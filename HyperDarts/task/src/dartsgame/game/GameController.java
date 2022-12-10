@@ -57,7 +57,7 @@ public class GameController {
 
         //Checks if game is in "created" state
         if (!gameService.isAvailableToJoin(gameID)) {
-            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You can't join the game"));
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You can't join the game!"));
         }
 
         //Checks if user has any ongoing games
