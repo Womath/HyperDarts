@@ -1,5 +1,6 @@
 package dartsgame.game;
 
+import dartsgame.game.history.GameHistory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,7 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,36 +15,39 @@ import java.util.Map;
 @RequestMapping("/api/game")
 public class GameController {
 
-    private final Map<String, String> status = new HashMap<>();
     private final GameService gameService;
+    private final Validator validator;
 
     @Autowired
-    public GameController(GameService gameService) {
+    public GameController(GameService gameService, Validator validator) {
         this.gameService = gameService;
+        this.validator = validator;
     }
 
     /**
      * Creates a new game if user doesn't have any ongoing or created games.
-     * @param auth - User
-     * @param createGameForm - Request's body
-     * @return - Response as a Map (error result or state of the Game)
+     * @param auth - currently logged-in user
+     * @param createGameForm - the form containing the game creation parameters
+     * @return - a response entity containing the map representation of the created game, or a BAD_REQUEST status if
+     * the game cannot be created
      */
     @PostMapping("/create")
     public ResponseEntity<Map> createGame(Authentication auth, @RequestBody CreateGameForm createGameForm) {
+        Integer targetScore = validator.validateIntegerInput(createGameForm.getTargetScore());
         //Checks if user has any ongoing or created games
         if (gameService.isInGame(auth.getName())) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You have an unfinished game!"));
         }
         //Checks if user provided a valid game mode (101, 301 or 501)
-        if (!gameService.validateTargetScore(createGameForm.getTargetScore())) {
+        if (!validator.validateTargetScore(targetScore)) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong target score!"));
         }
-        return ResponseEntity.ok(gameService.addNewGame(auth.getName(), createGameForm.getTargetScore()));
+        return ResponseEntity.ok(gameService.addNewGame(auth.getName(), targetScore));
     }
 
     /**
-     * List all the ongoing or created games
-     * @return - Empty list or List of Game objects
+     * List all the ongoing or created games.
+     * @return - a response entity containing the list of games, or a NOT_FOUND status if there are no active games
      */
     @GetMapping("/list")
     public ResponseEntity<List<Game>> getCurrentGames() {
@@ -52,29 +55,37 @@ public class GameController {
         if (listOfGames.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(listOfGames);
         }
-        return ResponseEntity.ok(gameService.getAllGames());
+        return ResponseEntity.ok(listOfGames);
     }
 
     /**
-     * Lets a user join to a created game
-     * @param auth - User
-     * @param gameID - ID of the game user wants to join (from path)
-     * @return - Response as a Map (error result or state of the Game)
+     * Lets a user join to a created game.
+     * @param auth - currently logged-in user
+     * @param gameID - unique identifier of the requested game
+     * @return - a response entity containing the map representation of the joined game, or different error
+     * messages containing why player couldn't join the game
      */
     @GetMapping("/join/{gameID}")
-    public ResponseEntity<Map> joinGame(Authentication auth, @PathVariable("gameID") Long gameID) {
+    public ResponseEntity<Map> joinGame(Authentication auth, @PathVariable("gameID") String gameID) {
+
+        //Checks if id is a number
+        Long id = validator.validateLongInput(gameID);
+        if (id == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong request!"));
+        }
+
         //Checks if game exists
-        if (!gameService.isGame(gameID)) {
+        if (!gameService.isGame(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("result", "Game not found!"));
         }
 
         //Checks if game is created by the same user that wants to join
-        if (gameService.isInThisGame(auth.getName(), gameID)) {
+        if (gameService.isCreatedByThisPlayer(auth.getName(), id)) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You can't play alone!"));
         }
 
         //Checks if game is in "created" state
-        if (!gameService.isAvailableToJoin(gameID)) {
+        if (!gameService.isAvailableToJoin(id)) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You can't join the game!"));
         }
 
@@ -83,13 +94,14 @@ public class GameController {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You have an unfinished game!"));
         }
 
-        return ResponseEntity.ok(gameService.joinGame(auth.getName(), gameID));
+        return ResponseEntity.ok(gameService.joinGame(auth.getName(), id));
     }
 
     /**
-     * Shows the status of the user's ongoing or created game
-     * @param auth - User
-     * @return - Response as a Map (error result or state of the Game)
+     * Shows the status of the user's ongoing or created game.
+     * @param auth - currently logged-in user
+     * @return - a response entity containing the map representation of the found game, or a NOT_FOUND status if
+     * such a game does not exist
      */
     @GetMapping("/status")
     public ResponseEntity<Map> getGameStatus(Authentication auth) {
@@ -103,10 +115,11 @@ public class GameController {
     }
 
     /**
-     * Handles the inputted thrown scores
-     * @param auth - User
-     * @param dartsThrowForm - Object for request's body
-     * @return - Response as a Map (error result or state of the Game)
+     * Handles the inputted thrown scores.
+     * @param auth - currently logged-in user
+     * @param dartsThrowForm - a form containing the throw parameters
+     * @return - a response entity containing the map representation of the modified game, or different error
+     * messages containing why provided throws could not be applied
      */
     @PostMapping("/throws")
     public ResponseEntity<Map> postThrows(Authentication auth, @RequestBody DartsThrowForm dartsThrowForm) {
@@ -119,14 +132,11 @@ public class GameController {
 
         Long gameId = (Long) game.get("gameId");
 
-        //Creates ThrownDart objects from provided text
-        ThrownDart[] thrownDarts = new ThrownDart[]{
-                gameService.extractThrow(1, dartsThrowForm.getFirst()),
-                gameService.extractThrow(2, dartsThrowForm.getSecond()),
-                gameService.extractThrow(3, dartsThrowForm.getThird())};
+        //Creates ThrownDart objects from provided text if input data is valid
+        ThrownDart[] thrownDarts = validator.validateThrows(gameService.getGame(gameId), auth.getName(), dartsThrowForm);
 
-        //Checks if it is a valid turn or not
-        if (!gameService.validateThrows(gameId, auth.getName(), thrownDarts)) {
+        //Checks if provided throws were correct or not
+        if (thrownDarts.length == 0) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong throws!"));
         }
 
@@ -140,17 +150,88 @@ public class GameController {
     }
 
     /**
+     * Changes the state of a not finished game.
+     * @param cancelGameForm - a form containing the cancel parameters
+     * @return - a response entity containing the map representation of the modified game, or different error
+     * messages containing why game could not be cancelled
+     */
+    @PutMapping(path = "/cancel")
+    public ResponseEntity<Map> cancelGame(@RequestBody CancelGameForm cancelGameForm) {
+
+        Long id = validator.validateLongInput(cancelGameForm.getGameId());
+
+        if (id == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong request!"));
+        }
+
+        if (!gameService.isGame(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("result", "Game not found!"));
+        }
+
+        Game game = gameService.getGame(id);
+
+        if (!validator.validateFinishedGameStatus(cancelGameForm.getStatus(), game)) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong status!"));
+        }
+
+        if (game.getGameStatus().matches("\\S*\\swins!")) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "The game is already over!"));
+        }
+
+        return ResponseEntity.ok(gameService.changeGameStatus(id, cancelGameForm.getStatus()));
+    }
+
+
+    /**
+     * Reverts a game to a chosen previous state.
+     * @param revertGameForm - a form containing parameters to revert a game
+     * @return - a response entity containing the map representation of the modified game, or different error
+     * messages containing why game could not be reverted
+     */
+    @PutMapping(path = "/revert")
+    public ResponseEntity<Map> revertGame(@RequestBody RevertGameForm revertGameForm) {
+        Long gameId = validator.validateLongInput(revertGameForm.getGameId());
+        Integer move = validator.validateIntegerInput(revertGameForm.getMove());
+
+        if (gameId == null || move == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong request!"));
+        }
+
+        GameHistory gameHistory = gameService.getGameHistory(gameId);
+        if (gameHistory == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("result", "Game not found!"));
+        }
+        if (gameService.getGame(gameId).getGameStatus().equals("created")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("result", "Game not found!"));
+        }
+        if (gameHistory.getHistoryList().size() <= move) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Move not found!"));
+        }
+        if (move + 1 == gameHistory.getHistoryList().size()) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "There is nothing to revert!"));
+        }
+        if (gameHistory.getHistoryList().get(gameHistory.getHistoryList().size() - 1).getGameStatus().matches("\\S*\\swins!")) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "The game is over!"));
+        }
+
+        return ResponseEntity.ok(gameService.setGameBackToGameState(gameId, move));
+    }
+
+    /**
      * Not part of the project (yet) but it can delete any game from the table
-     * @param gameID - ID of the game
-     * @return - Responds with success message or not found code
+     * @param gameID - unique identifier of the game that needs to be deleted
+     * @return - Responds with success message, not found code, or error message if path variable is incorrect
      */
     @DeleteMapping(path = "/delete/{gameID}")
-    public ResponseEntity<Map> deleteGame(@PathVariable("gameID") Long gameID) {
-        if (gameService.deleteGame(gameID)) {
-            return ResponseEntity.ok(Collections.singletonMap("result", "Game with ID=" + gameID + " successfully deleted!"));
+    public ResponseEntity<Map> deleteGame(@PathVariable("gameID") String gameID) {
+        Long id = validator.validateLongInput(gameID);
+        if (id == null) {
+            return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong request!"));
+        }
+        if (gameService.deleteGame(id)) {
+            return ResponseEntity.ok(Collections.singletonMap("result", "Game with ID=" + id + " successfully deleted!"));
         } else {
             return ResponseEntity.notFound().build();
         }
     }
-
 }

@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private static final String ROLE_GAMER = "GAMER";
     private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_REFEREE = "REFEREE";
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -20,7 +21,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .withUser("wilhelmtell@acme.com").password("{noop}" + "bv0y9bMvyF7E").roles(ROLE_GAMER)
                 .and()
-                .withUser("admin@acme.com").password("{noop}" + "zy0y3bMvyA6T").roles(ROLE_ADMIN);
+                .withUser("admin@acme.com").password("{noop}" + "zy0y3bMvyA6T").roles(ROLE_ADMIN)
+                .and()
+                .withUser("judgedredd@acme.com").password("{noop}" + "iAmALaw100500").roles(ROLE_REFEREE);
     }
 
     @Bean

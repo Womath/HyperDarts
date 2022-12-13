@@ -1,6 +1,9 @@
 package dartsgame.game;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.persistence.*;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity
@@ -114,7 +117,7 @@ public class Game {
     @Override
     public String toString() {
         return "Game{" +
-                "gameID=" + gameId +
+                "gameId=" + gameId +
                 ", playerOne='" + playerOne + '\'' +
                 ", playerTwo='" + playerTwo + '\'' +
                 ", gameStatus='" + gameStatus + '\'' +
@@ -122,5 +125,10 @@ public class Game {
                 ", playerTwoScores=" + playerTwoScores +
                 ", turn='" + turn + '\'' +
                 '}';
+    }
+
+    public Map toMap() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.convertValue(this, Map.class);
     }
 }

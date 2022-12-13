@@ -4,20 +4,20 @@ package dartsgame.game;
  * Object of body for /create API
  */
 public class CreateGameForm {
-    private Integer targetScore;
+    private String targetScore;
 
     public CreateGameForm() {
     }
 
-    public CreateGameForm(Integer targetScore) {
+    public CreateGameForm(String targetScore) {
         this.targetScore = targetScore;
     }
 
-    public Integer getTargetScore() {
+    public String getTargetScore() {
         return targetScore;
     }
 
-    public void setTargetScore(Integer targetScore) {
+    public void setTargetScore(String targetScore) {
         this.targetScore = targetScore;
     }
 }
