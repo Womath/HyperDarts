@@ -1,4 +1,8 @@
-package dartsgame.game.history;
+package dartsgame.game.persistance.dao;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -6,6 +10,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "game_history")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class GameHistory {
 
     @Id
@@ -14,28 +21,9 @@ public class GameHistory {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GameState> historyList;
 
-    public GameHistory() {
-    }
-
     public GameHistory(Long gameId) {
         this.gameId = gameId;
         historyList = new ArrayList<>();
-    }
-
-    public Long getGameId() {
-        return gameId;
-    }
-
-    public void setGameId(Long gameId) {
-        this.gameId = gameId;
-    }
-
-    public List<GameState> getHistoryList() {
-        return historyList;
-    }
-
-    public void setHistoryList(List<GameState> historyList) {
-        this.historyList = historyList;
     }
 
     public void addNewGameState(Long gameId,

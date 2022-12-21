@@ -1,6 +1,9 @@
-package dartsgame.game;
+package dartsgame.game.controller;
 
-import dartsgame.game.history.GameHistory;
+import dartsgame.game.service.*;
+import dartsgame.game.persistance.dao.Game;
+import dartsgame.game.persistance.dao.GameHistory;
+import dartsgame.game.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +36,7 @@ public class GameController {
      */
     @PostMapping("/create")
     public ResponseEntity<Map> createGame(Authentication auth, @RequestBody CreateGameForm createGameForm) {
-        Integer targetScore = validator.validateIntegerInput(createGameForm.getTargetScore());
-        //Checks if user has any ongoing or created games
+        Integer targetScore = createGameForm.getTargetScore();
         if (gameService.isInGame(auth.getName())) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "You have an unfinished game!"));
         }
@@ -158,7 +160,7 @@ public class GameController {
     @PutMapping(path = "/cancel")
     public ResponseEntity<Map> cancelGame(@RequestBody CancelGameForm cancelGameForm) {
 
-        Long id = validator.validateLongInput(cancelGameForm.getGameId());
+        Long id = cancelGameForm.getGameId();
 
         if (id == null) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong request!"));
@@ -190,8 +192,8 @@ public class GameController {
      */
     @PutMapping(path = "/revert")
     public ResponseEntity<Map> revertGame(@RequestBody RevertGameForm revertGameForm) {
-        Long gameId = validator.validateLongInput(revertGameForm.getGameId());
-        Integer move = validator.validateIntegerInput(revertGameForm.getMove());
+        Long gameId = revertGameForm.getGameId();
+        Integer move = revertGameForm.getMove();
 
         if (gameId == null || move == null) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("result", "Wrong request!"));

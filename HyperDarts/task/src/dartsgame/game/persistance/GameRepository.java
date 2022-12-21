@@ -1,5 +1,6 @@
-package dartsgame.game;
+package dartsgame.game.persistance;
 
+import dartsgame.game.persistance.dao.Game;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

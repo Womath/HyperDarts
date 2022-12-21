@@ -1,6 +1,7 @@
-package dartsgame.game.history;
+package dartsgame.game.controller;
 
-import dartsgame.game.GameService;
+import dartsgame.game.service.GameService;
+import dartsgame.game.persistance.dao.GameHistory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,8 +1,11 @@
-package dartsgame.game;
+package dartsgame.game.service;
 
-import dartsgame.game.history.GameHistory;
-import dartsgame.game.history.GameHistoryRepository;
-import dartsgame.game.history.GameState;
+import dartsgame.game.persistance.dao.Game;
+import dartsgame.game.persistance.dao.GameHistory;
+import dartsgame.game.dto.ThrownDart;
+import dartsgame.game.persistance.GameHistoryRepository;
+import dartsgame.game.persistance.dao.GameState;
+import dartsgame.game.persistance.GameRepository;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

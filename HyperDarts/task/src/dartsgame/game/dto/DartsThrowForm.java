@@ -1,4 +1,4 @@
-package dartsgame.game;
+package dartsgame.game.dto;
 
 /**
  * Object of body for /throws API

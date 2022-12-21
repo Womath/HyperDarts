@@ -1,4 +1,4 @@
-package dartsgame.game;
+package dartsgame.game.dto;
 
 /**
  * This class represents a form for canceling a game.
@@ -8,22 +8,22 @@ package dartsgame.game;
  *  - status: the new status of the game (should be "CANCELED")
  */
 public class CancelGameForm {
-    private String gameId;
+    private Long gameId;
     private String status;
 
     public CancelGameForm() {
     }
 
-    public CancelGameForm(String gameId, String status) {
+    public CancelGameForm(Long gameId, String status) {
         this.gameId = gameId;
         this.status = status;
     }
 
-    public String getGameId() {
+    public Long getGameId() {
         return gameId;
     }
 
-    public void setGameId(String gameId) {
+    public void setGameId(Long gameId) {
         this.gameId = gameId;
     }
 

@@ -1,23 +1,23 @@
-package dartsgame.game;
+package dartsgame.game.dto;
 
 /**
  * Object of body for /create API
  */
 public class CreateGameForm {
-    private String targetScore;
+    private Integer targetScore;
 
     public CreateGameForm() {
     }
 
-    public CreateGameForm(String targetScore) {
+    public CreateGameForm(Integer targetScore) {
         this.targetScore = targetScore;
     }
 
-    public String getTargetScore() {
+    public Integer getTargetScore() {
         return targetScore;
     }
 
-    public void setTargetScore(String targetScore) {
+    public void setTargetScore(Integer targetScore) {
         this.targetScore = targetScore;
     }
 }

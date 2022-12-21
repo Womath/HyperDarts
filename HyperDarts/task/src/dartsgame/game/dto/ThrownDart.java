@@ -1,4 +1,4 @@
-package dartsgame.game;
+package dartsgame.game.dto;
 
 /**
  * An object to handle each thrown dart separately.

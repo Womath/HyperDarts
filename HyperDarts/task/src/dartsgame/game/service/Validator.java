@@ -1,5 +1,8 @@
-package dartsgame.game;
+package dartsgame.game.service;
 
+import dartsgame.game.persistance.dao.Game;
+import dartsgame.game.dto.DartsThrowForm;
+import dartsgame.game.dto.ThrownDart;
 import org.springframework.stereotype.Component;
 
 @Component
